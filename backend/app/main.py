@@ -7,6 +7,7 @@ from app.api.attribution import router as attribution_router
 from app.api.exposure import router as exposure_router
 from app.api.actions import router as actions_router
 from app.api.community import router as community_router
+from app.api.ingestion import ingestion_pipeline
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -42,6 +43,17 @@ app.include_router(attribution_router, prefix=settings.API_V1_STR)
 app.include_router(exposure_router, prefix=settings.API_V1_STR)
 app.include_router(actions_router, prefix=settings.API_V1_STR)
 app.include_router(community_router, prefix=settings.API_V1_STR)
+
+# Ingestion status endpoint (public, no auth — for monitoring dashboards)
+from fastapi import APIRouter as _APIRouter
+_ingestion_router = _APIRouter(prefix="/ingestion", tags=["ingestion"])
+
+@_ingestion_router.get("/snapshot")
+def get_ingestion_snapshot():
+    """Run a live ingestion cycle and return the merged atmospheric snapshot."""
+    return ingestion_pipeline.run()
+
+app.include_router(_ingestion_router, prefix=settings.API_V1_STR)
 
 if __name__ == "__main__":
     import uvicorn
