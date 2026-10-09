@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  WhyBadAQI - Serverless Architecture for Real-Time Air Quality Source Attribution
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Environment:
+      Variables:
+        STAGE: prod
+        DYNAMODB_TABLE: !Ref SensorStateTable
+        S3_DATA_LAKE: !Ref RawDataLakeBucket
+
+Resources:
+  # 1. S3 Data Lake for Satellite & OpenAQ Sensor Streams
+  RawDataLakeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'whybadaqi-raw-data-lake-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # 2. DynamoDB Table for Hyperlocal Real-Time Sensor State
+  SensorStateTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: WhyBadAQI_SensorState
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: geohash
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: geohash
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # 3. Cognito User Pool for Mobile App Authentication
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: WhyBadAQI_Users
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: WhyBadAQI_Mobile_App
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+
+  # 4. Ingestion Lambda: OpenAQ & NASA FIRMS Sync (Cron trigger)
+  IngestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.ingestion_handler.lambda_handler
+      CodeUri: ../backend
+      Description: Ingests satellite fire spots and live sensor stations every 15 minutes
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref RawDataLakeBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SensorStateTable
+      Events:
+        ScheduledIngest:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+
+  # 5. Core API Lambda Function behind API Gateway
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.main.handler
+      CodeUri: ../backend
+      Description: FastAPI application handling attribution, exposure scoring, and community reports
+      Events:
+        RootApi:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+  # 6. SNS Topic for Push Notifications & Critical Alerts
+  HighPollutionAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: WhyBadAQI_HighPollutionAlerts
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL for Prod environment"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  UserPoolId:
+    Description: "Cognito User Pool ID"
+    Value: !Ref CognitoUserPool
+  UserPoolClientId:
+    Description: "Cognito App Client ID"
+    Value: !Ref CognitoUserPoolClient
