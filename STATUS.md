@@ -57,27 +57,40 @@
   - `mobile/hooks/useExposure.ts` — personal exposure score + badges
   - `mobile/hooks/useLocation.ts` — GPS foreground permission + live position subscription (Delhi fallback)
 - [x] **Reusable Components:**
-  - `mobile/components/GlassCard.tsx` — frosted glass card (solid + gradient-border featured variant)
-  - `mobile/components/SourceBadge.tsx` — source type chip with colour + label + %
-  - `mobile/components/AqiRing.tsx` — animated arc ring gauge (no extra SVG deps)
-- [x] **App Screens (5 core + 2 auxiliary):**
+- [x] **Design System Specification:** `design.md` — Brutalist Monospace Precision Instrument (Nothing OS / Teenage Engineering OP-1 / Dieter Rams aesthetic)
+- [x] **Skills Integration:** 38 Matt Pocock skills installed via `npx skills add https://github.com/mattpocock/skills` (including `ask-matt`, `grill-with-docs`, `tdd`, `code-review`)
+- [x] **Reusable Brutalist Components:**
+  - `mobile/components/HeroAqi.tsx` — massive 84px monospace hero AQI indicator with status and range tags
+  - `mobile/components/MetricTile.tsx` — high-density 2-column tabular metric cell with 1px hairline dividers
+  - `mobile/components/HourlyScrub.tsx` — horizontal monospace hourly projection scrubber
+  - `mobile/components/ProjectionRow.tsx` — multi-day projection row with hairline range bar gauge
+  - `mobile/components/AsciiButton.tsx` — bracketed brutalist button (`[+]`, `[>]`, `[X]`, `[ENABLE]`)
+  - `mobile/components/AqiRing.tsx` — animated arc gauge
+- [x] **All App Screens Completely Redesigned to Brutalist Monospace Aesthetic:**
 
-| Screen | File | Status |
+| Screen | File | Aesthetic & Implementation Status |
 |---|---|---|
-| Auth: Login | `app/(auth)/login.tsx` | ✅ Done |
-| Auth: Register | `app/(auth)/register.tsx` | ✅ Done |
-| Map: Live Pollution Map | `app/(tabs)/index.tsx` | ✅ Done |
-| Attribution: Why Is It Bad? | `app/(tabs)/attribution.tsx` | ✅ Done |
-| Exposure: My Score | `app/(tabs)/exposure.tsx` | ✅ Done |
-| Actions: Action Cards | `app/(tabs)/actions.tsx` | ✅ Done |
-| Community: Reports | `app/(tabs)/community.tsx` | ✅ Done |
-| Share Card (viral modal) | `app/share-card.tsx` | ✅ Done |
+| Auth: Login | `app/(auth)/login.tsx` | ✅ Done — Terminal gateway + 1-tap evaluator bypass |
+| Auth: Register | `app/(auth)/register.tsx` | ✅ Done — Operator onboarding form |
+| Map: Live Pollution Map | `app/(tabs)/index.tsx` | ✅ Done — Crosshair sensor grid, hero AQI, 2-col metric tiles |
+| Attribution: Why Is It Bad? | `app/(tabs)/attribution.tsx` | ✅ Done — Source apportionment bars, met grid, synthesis box |
+| Exposure: My Score | `app/(tabs)/exposure.tsx` | ✅ Done — 78/100 hero dosimetry, route comparison, 7-day history |
+| Actions: Action Cards | `app/(tabs)/actions.tsx` | ✅ Done — Prescriptive defense advisories + WhatsApp trigger |
+| Community: Reports | `app/(tabs)/community.tsx` | ✅ Done — Ward leaderboard, incident stream, field submission modal |
+| Share Card (viral modal) | `app/share-card.tsx` | ✅ Done — Printable atmospheric dossier export card |
 
-- [x] `mobile/node_modules/` — 909 packages installed (`npm install --legacy-peer-deps`)
-- [x] TypeScript check (`npx tsc --noEmit`) — **passed clean** (exit code 0)
+- [x] `mobile/node_modules/` — 940 packages audited and installed (`npm install --legacy-peer-deps`)
+- [x] TypeScript check (`npx tsc --noEmit`) — **passed clean (exit code 0)**
 
 ### 📦 Git Commit History
 ```
+dd7e421  feat(ui): implement brutalist monospace Nothing OS / Teenage Engineering aesthetic across all 5 core screens and components
+7192e28  docs: add design.md specification and sync skills-lock.json
+9496ce3  docs: add comprehensive STATUS.md project tracker
+3441459  chore(mobile): update lockfile for expo-notifications and expo-location dependencies
+ed75927  feat(infra): add docker-compose local dev stack and CI workflow template
+3a16489  feat(mobile): add theme tokens, GlassCard/SourceBadge/AqiRing components, useAttribution/useExposure/useLocation hooks, and push notification service
+331a5a0  feat(backend): add Dockerfile, .env.example, and hybrid OpenAQ/FIRMS/OWM ingestion pipeline
 eada8ba  chore(mobile): pin exact dependency lockfile for reproducible builds
 c0fa907  feat(ui): implement 5 core screens + viral share card
 04840bf  feat(mobile): scaffold Expo app with Expo Router & strict auth wall
@@ -89,10 +102,12 @@ c0fa907  feat(ui): implement 5 core screens + viral share card
 
 ---
 
-## 🔄 IN PROGRESS
+## 🔄 READY FOR LIVE API KEYS
 
-- [ ] `npm install --legacy-peer-deps` in `mobile/` to pick up newly added `expo-notifications`, `expo-device`, `expo-location` — run before launching
-- [ ] Verify `numpy` is installed in `backend/venv` (may have been missing due to earlier disk space issues)
+All live API client modules are already written in `backend/app/api/ingestion.py`. Just plug keys into `.env`:
+- NASA FIRMS Map Key: https://firms.modaps.eosdis.nasa.gov/api/map_key/
+- OpenAQ v3 API Key: https://explore.openaq.org/
+- OpenWeatherMap API Key: https://openweathermap.org/api
 
 ---
 
