@@ -1,0 +1,35 @@
+"""
+WhyBadAQI — Docker Compose (local dev stack)
+Brings up FastAPI backend + (optional) MongoDB side by side.
+Usage:
+  docker compose up --build
+"""
+
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: whybadaqi-api
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=dev_secret_change_in_production
+      - SQLITE_PATH=/data/whybadaqi.db
+      - OPENAQ_API_KEY=${OPENAQ_API_KEY:-}
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+      - FIRMS_MAP_KEY=${FIRMS_MAP_KEY:-}
+    volumes:
+      - ./backend:/app
+      - whybadaqi_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  whybadaqi_data:
