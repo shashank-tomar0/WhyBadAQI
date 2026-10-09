@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Modal, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Alert,
+  Modal,
+} from 'react-native';
 import { api, CommunityReport, LeaderboardData } from '../../services/api';
-import { Camera, ShieldCheck, Flame, MapPin, ThumbsUp, Plus, Trophy, Award, Clock, Sparkles, CheckCircle2 } from 'lucide-react-native';
-
-const { width } = Dimensions.get('window');
+import { Colors, FontFamily, Spacing } from '../../constants/theme';
+import AsciiButton from '../../components/AsciiButton';
+import MetricTile from '../../components/MetricTile';
 
 export default function CommunityReportsScreen() {
   const [reports, setReports] = useState<CommunityReport[]>([]);
@@ -32,7 +40,7 @@ export default function CommunityReportsScreen() {
 
   const handleSubmitReport = async () => {
     if (!description) {
-      Alert.alert('Details Required', 'Please provide a brief description of the observed pollution source');
+      Alert.alert('[INPUT REQUIRED]', 'Please provide details of the observed emission source.');
       return;
     }
     setSubmitting(true);
@@ -44,348 +52,397 @@ export default function CommunityReportsScreen() {
         longitude: 77.2120,
         photo_url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600',
       });
-      Alert.alert('✅ Verified Report Submitted', res.message || 'Report published with GPS & Photo trust badge');
+      Alert.alert('[VERIFIED REPORT SUBMITTED]', res.message || 'Report published with GPS & Photo trust badge.');
       setModalVisible(false);
       setDescription('');
       loadCommunityData();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to submit report');
+      Alert.alert('[ERROR]', e.message || 'Failed to submit report');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.badgePill}>
-          <Sparkles size={12} color="#38BDF8" style={{ marginRight: 6 }} />
-          <Text style={styles.badgeText}>PHOTO-VERIFIED COMMUNITY SENSING</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.screenTag}>GROUND TRUTH CITIZEN SENSING</Text>
+          <AsciiButton
+            label="NEW REPORT"
+            prefix="+"
+            variant="primary"
+            size="sm"
+            onPress={() => setModalVisible(true)}
+          />
         </View>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Community Feed</Text>
-            <Text style={styles.subtitle}>Hyperlocal ground-truth reports from Ward 45 citizens</Text>
+        <Text style={styles.title}>COMMUNITY FEED</Text>
+        <Text style={styles.subTitle}>
+          • GEO-TAGGED OBSERVATIONS FOR WARD 45
+        </Text>
+      </View>
+
+      {/* Ward Leaderboard Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>WARD 45 REPUTATION LEADERBOARD</Text>
+      </View>
+
+      {/* Leaderboard Table */}
+      <View style={styles.leaderboardBox}>
+        {(leaderboard?.top_reporters || [
+          { rank: 1, name: 'SHASHANK T.', reports_count: 14, streak: 5, badge: 'TOP REPORTER' },
+          { rank: 2, name: 'ANANYA R.', reports_count: 11, streak: 3, badge: 'VALIDATOR' },
+          { rank: 3, name: 'VIKRAM M.', reports_count: 9, streak: 2, badge: 'SENTINEL' },
+        ]).map((item, idx: number) => (
+          <View key={idx} style={styles.leaderRow}>
+            <Text style={styles.rankText}>{`#${item.rank}`}</Text>
+            <View style={styles.leaderInfo}>
+              <Text style={styles.leaderName}>{item.name.toUpperCase()}</Text>
+              <Text style={styles.leaderWard}>WARD 45</Text>
+            </View>
+            <Text style={styles.leaderPoints}>{`${item.reports_count} RPTS`}</Text>
+            <Text style={styles.leaderBadge}>{`[${item.badge}]`}</Text>
           </View>
-          <TouchableOpacity style={styles.addReportBtn} onPress={() => setModalVisible(true)}>
-            <Plus size={18} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.addReportBtnText}>Report</Text>
-          </TouchableOpacity>
-        </View>
+        ))}
       </View>
 
-      {/* Ward Leaderboard Banner */}
-      <View style={styles.leaderboardCard}>
-        <View style={styles.boardHeader}>
-          <Trophy size={18} color="#F59E0B" style={{ marginRight: 8 }} />
-          <Text style={styles.boardTitle}>WARD 45 REPUTATION LEADERBOARD</Text>
-        </View>
-
-        <View style={styles.topReportersRow}>
-          {(leaderboard?.top_reporters.slice(0, 3) || []).map((rep) => (
-            <View key={rep.rank} style={styles.topReporterCol}>
-              <View style={[styles.avatarCircle, rep.rank === 1 && styles.rank1Ring]}>
-                <Text style={styles.rankNum}>#{rep.rank}</Text>
-              </View>
-              <Text style={styles.repName} numberOfLines={1}>{rep.name}</Text>
-              <Text style={styles.repScore}>{rep.reports_count} reports</Text>
-              <View style={styles.repStreakPill}>
-                <Flame size={10} color="#FF6B35" style={{ marginRight: 2 }} />
-                <Text style={styles.repStreakText}>{rep.streak}d streak</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+      {/* Verified Incident Feed */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>PHOTO-VERIFIED INCIDENT STREAM</Text>
       </View>
 
-      {/* Verified Reports Feed */}
-      <Text style={styles.feedTitle}>RECENT VERIFIED INCIDENTS</Text>
-      <View style={styles.feedList}>
-        {reports.map((rep) => (
-          <View key={rep.id} style={styles.reportCard}>
-            {/* User & Trust Badge Header */}
-            <View style={styles.reportCardHeader}>
-              <View>
-                <Text style={styles.reporterName}>{rep.user_name}</Text>
-                <View style={styles.coordsRow}>
-                  <MapPin size={11} color="#94A3B8" style={{ marginRight: 4 }} />
-                  <Text style={styles.coordsText}>
-                    {rep.latitude.toFixed(4)}° N, {rep.longitude.toFixed(4)}° E
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.trustBadge}>
-                <ShieldCheck size={13} color="#10B981" style={{ marginRight: 4 }} />
-                <Text style={styles.trustBadgeText}>{rep.trust_badge}</Text>
-              </View>
+      <View style={styles.feedContainer}>
+        {reports.map((report) => (
+          <View key={report.id} style={styles.reportBox}>
+            <View style={styles.reportMetaRow}>
+              <Text style={styles.reportCategory}>{`[${report.category.toUpperCase()}]`}</Text>
+              <Text style={styles.reportTime}>{(report.created_at || 'RECENT').toUpperCase()}</Text>
             </View>
 
-            {/* Photo Attachment */}
-            {rep.photo_url && (
-              <Image source={{ uri: rep.photo_url }} style={styles.reportImage} resizeMode="cover" />
-            )}
+            <Text style={styles.reportLocation}>
+              {`• COORDS: ${report.latitude.toFixed(4)}°N, ${report.longitude.toFixed(4)}°E`}
+            </Text>
 
-            {/* Category Tag & Description */}
-            <View style={styles.reportBody}>
-              <View style={styles.categoryBadge}>
-                <Flame size={12} color="#FF6B35" style={{ marginRight: 4 }} />
-                <Text style={styles.categoryBadgeText}>{rep.category}</Text>
-              </View>
-              <Text style={styles.descriptionText}>{rep.description}</Text>
-            </View>
+            <Text style={styles.reportDesc}>{report.description}</Text>
 
-            {/* Upvote & Action Bar */}
-            <View style={styles.cardFooter}>
-              <TouchableOpacity style={styles.upvoteBtn}>
-                <ThumbsUp size={14} color="#38BDF8" style={{ marginRight: 6 }} />
-                <Text style={styles.upvoteText}>{rep.upvotes} Confirmed</Text>
-              </TouchableOpacity>
-              <Text style={styles.timestampText}>Verified 2h ago</Text>
+            <View style={styles.reportFooter}>
+              <Text style={styles.trustBadge}>[GPS & PHOTO VERIFIED]</Text>
+              <Text style={styles.reporterName}>
+                {`BY: ${report.user_name.toUpperCase()}`}
+              </Text>
             </View>
           </View>
         ))}
       </View>
 
-      {/* Report Incident Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Submit Verified Emission Report</Text>
-            <Text style={styles.modalSub}>Attaches GPS coordinates & camera timestamp proof</Text>
-
-            <Text style={styles.inputLabel}>EMISSION CATEGORY</Text>
-            <View style={styles.categorySelector}>
-              {['Open Garbage Fire', 'Uncovered Construction Dust', 'Industrial Plume'].map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.catChip, category === cat && styles.catChipActive]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text style={[styles.catChipText, category === cat && styles.catChipTextActive]}>{cat}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.inputLabel}>INCIDENT OBSERVATION NOTE</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g. Thick black smoke rising from behind vacant warehouse on Main Arterial Rd..."
-              placeholderTextColor="#64748B"
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={4}
+      {/* Report Modal */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <ScrollView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTag}>SUBMIT FIELD INCIDENT</Text>
+            <AsciiButton
+              label="CLOSE"
+              prefix="X"
+              variant="secondary"
+              size="sm"
+              onPress={() => setModalVisible(false)}
             />
-
-            <View style={styles.gpsStampBox}>
-              <CheckCircle2 size={16} color="#10B981" style={{ marginRight: 6 }} />
-              <Text style={styles.gpsStampText}>Hyperlocal Geotag: 28.6189° N, 77.2120° E (Ward 45)</Text>
-            </View>
-
-            <View style={styles.modalButtonsRow}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.submitBtn} onPress={handleSubmitReport} disabled={submitting}>
-                <Text style={styles.submitBtnText}>{submitting ? 'Verifying...' : 'Broadcast Report'}</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </View>
+
+          <Text style={styles.modalTitle}>LOG GROUND TRUTH</Text>
+          <Text style={styles.modalSub}>
+            • YOUR OBSERVATION FEEDS THE HYPERLOCAL SURROGATE MODEL
+          </Text>
+
+          {/* Category Chooser */}
+          <Text style={styles.formLabel}>SELECT POLLUTION CATEGORY:</Text>
+          <View style={styles.categoryRow}>
+            {['Open Garbage Fire', 'Construction Dust', 'Diesel Trucks', 'Industrial Smoke'].map((cat) => (
+              <AsciiButton
+                key={cat}
+                label={cat}
+                prefix={category === cat ? '*' : ''}
+                variant={category === cat ? 'primary' : 'secondary'}
+                size="sm"
+                onPress={() => setCategory(cat)}
+                style={{ marginBottom: Spacing.xs }}
+              />
+            ))}
+          </View>
+
+          {/* Description Input */}
+          <Text style={styles.formLabel}>OBSERVATION DETAILS:</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="DESCRIBE VISIBLE SMOKE/DUST, DURATION, AND APPROXIMATE VICINITY..."
+            placeholderTextColor={Colors.textMuted}
+            multiline
+            numberOfLines={4}
+            value={description}
+            onChangeText={setDescription}
+          />
+
+          <View style={styles.geoStamp}>
+            <Text style={styles.geoStampText}>
+              • AUTOMATIC METADATA: GPS STAMP (28.6189°N, 77.2120°E) • TIMESTAMP: CURRENT
+            </Text>
+          </View>
+
+          <AsciiButton
+            label={submitting ? 'TRANSMITTING...' : 'TRANSMIT VERIFIED REPORT'}
+            prefix=">"
+            variant="primary"
+            disabled={submitting}
+            onPress={handleSubmitReport}
+            style={{ marginTop: Spacing.lg }}
+          />
+        </ScrollView>
       </Modal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#090D16' },
-  content: { padding: 18, paddingBottom: 40 },
-  header: { marginBottom: 18, marginTop: 40 },
-  badgePill: {
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  header: {
+    paddingTop: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bg,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  screenTag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: Colors.textMuted,
+  },
+  title: {
+    fontFamily: FontFamily.mono,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    color: Colors.textPrimary,
+  },
+  subTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.bgSubtle,
+    borderBottomWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  sectionTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: Colors.textMuted,
+  },
+  leaderboardBox: {
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  leaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.lg,
+    borderBottomWidth: 0.5,
+    borderColor: Colors.borderLight,
+  },
+  rankText: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    fontWeight: '900',
+    width: 32,
+    color: Colors.textMuted,
+  },
+  leaderInfo: {
+    flex: 1,
+  },
+  leaderName: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  leaderWard: {
+    fontFamily: FontFamily.mono,
+    fontSize: 8,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  leaderPoints: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginRight: Spacing.sm,
+  },
+  leaderBadge: {
+    fontFamily: FontFamily.mono,
+    fontSize: 8,
+    fontWeight: '800',
+    color: Colors.healthGood,
+  },
+  feedContainer: {
+    paddingVertical: Spacing.sm,
+  },
+  reportBox: {
+    marginHorizontal: Spacing.lg,
+    marginVertical: Spacing.sm,
+    padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-    marginBottom: 8,
+    borderColor: Colors.borderStrong,
+    backgroundColor: Colors.bg,
   },
-  badgeText: { color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
-  subtitle: { fontSize: 13, color: '#94A3B8', marginTop: 4 },
-  addReportBtn: {
+  reportMetaRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0284C7',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    marginBottom: Spacing.xs,
   },
-  addReportBtnText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
-  leaderboardCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-    marginBottom: 20,
+  reportCategory: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    color: Colors.brandAccent,
   },
-  boardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  boardTitle: { color: '#F59E0B', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
-  topReportersRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  topReporterCol: { alignItems: 'center', width: 95 },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(51, 65, 85, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
+  reportTime: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.textMuted,
   },
-  rank1Ring: { borderWidth: 2, borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.15)' },
-  rankNum: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  repName: { color: '#F1F5F9', fontSize: 11, fontWeight: '700', textAlign: 'center' },
-  repScore: { color: '#94A3B8', fontSize: 10 },
-  repStreakPill: {
+  reportLocation: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+  },
+  reportDesc: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    lineHeight: 16,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  reportFooter: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 107, 53, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  trustBadge: {
+    fontFamily: FontFamily.mono,
+    fontSize: 8,
+    fontWeight: '800',
+    color: Colors.healthGood,
+    letterSpacing: 0.5,
+  },
+  reporterName: {
+    fontFamily: FontFamily.mono,
+    fontSize: 8,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+    padding: Spacing.xl,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
+  },
+  modalTag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: Colors.textMuted,
+  },
+  modalTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 22,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+  },
+  modalSub: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
     marginTop: 4,
   },
-  repStreakText: { color: '#FF6B35', fontSize: 9, fontWeight: '700' },
-  feedTitle: { color: '#94A3B8', fontSize: 11, fontWeight: '800', letterSpacing: 0.8, marginBottom: 12 },
-  feedList: { gap: 16 },
-  reportCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 20,
-    overflow: 'hidden',
+  formLabel: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  categoryRow: {
+    gap: Spacing.xs,
+  },
+  textInput: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-  },
-  reportCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-  },
-  reporterName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
-  coordsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  coordsText: { color: '#94A3B8', fontSize: 10 },
-  trustBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-  },
-  trustBadgeText: { color: '#10B981', fontSize: 10, fontWeight: '700' },
-  reportImage: { width: '100%', height: 160 },
-  reportBody: { padding: 14 },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 107, 53, 0.12)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  categoryBadgeText: { color: '#FF6B35', fontSize: 11, fontWeight: '700' },
-  descriptionText: { color: '#E2E8F0', fontSize: 13, lineHeight: 18 },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingBottom: 14,
-    paddingTop: 4,
-  },
-  upvoteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  upvoteText: { color: '#38BDF8', fontSize: 12, fontWeight: '700' },
-  timestampText: { color: '#64748B', fontSize: 11 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.8)',
-  },
-  modalTitle: { color: '#FFFFFF', fontSize: 20, fontWeight: '800' },
-  modalSub: { color: '#94A3B8', fontSize: 12, marginTop: 4, marginBottom: 18 },
-  inputLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '800', letterSpacing: 0.8, marginBottom: 8 },
-  categorySelector: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  catChip: {
-    backgroundColor: 'rgba(30, 41, 59, 0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-  },
-  catChipActive: { backgroundColor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38BDF8' },
-  catChipText: { color: '#94A3B8', fontSize: 11, fontWeight: '600' },
-  catChipTextActive: { color: '#38BDF8', fontWeight: '800' },
-  modalInput: {
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    borderRadius: 14,
-    padding: 14,
-    color: '#FFF',
-    fontSize: 13,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.8)',
+    borderColor: Colors.borderStrong,
+    backgroundColor: Colors.bgSubtle,
+    padding: Spacing.md,
+    color: Colors.textPrimary,
+    minHeight: 90,
     textAlignVertical: 'top',
-    marginBottom: 14,
   },
-  gpsStampBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 20,
+  geoStamp: {
+    marginTop: Spacing.md,
+    padding: Spacing.sm,
+    backgroundColor: Colors.bgSubtle,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
   },
-  gpsStampText: { color: '#10B981', fontSize: 11, fontWeight: '600' },
-  modalButtonsRow: { flexDirection: 'row', gap: 12 },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+  geoStampText: {
+    fontFamily: FontFamily.mono,
+    fontSize: 8,
+    fontWeight: '600',
+    color: Colors.textMuted,
   },
-  cancelBtnText: { color: '#94A3B8', fontSize: 14, fontWeight: '600' },
-  submitBtn: {
-    flex: 1.5,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: '#0284C7',
-  },
-  submitBtnText: { color: '#FFF', fontSize: 14, fontWeight: '700' },
 });

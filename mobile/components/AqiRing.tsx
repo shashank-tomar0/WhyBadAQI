@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   centre: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.bgBase,
+    backgroundColor: Colors.bg,
   },
   scoreText: {
     fontWeight: '800',

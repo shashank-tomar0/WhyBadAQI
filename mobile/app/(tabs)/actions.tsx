@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Dimensions, Share } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Linking,
+  Share,
+} from 'react-native';
 import { api, ActionCard } from '../../services/api';
-import { Shield, Bell, Share2, AlertTriangle, Clock, Activity, MapPin, Heart, Check, Sparkles } from 'lucide-react-native';
-
-const { width } = Dimensions.get('window');
+import { Colors, FontFamily, Spacing } from '../../constants/theme';
+import AsciiButton from '../../components/AsciiButton';
 
 export default function ActionCardsScreen() {
   const [cards, setCards] = useState<ActionCard[]>([]);
@@ -25,7 +32,7 @@ export default function ActionCardsScreen() {
   const handleSetReminder = (card: ActionCard) => {
     setRemindedIds((prev) => ({ ...prev, [card.id]: true }));
     Alert.alert(
-      '🔔 Reminder Configured',
+      '[REMINDER CONFIGURED]',
       `Push alert scheduled for ${card.reminder_time} today: "${card.title}"`
     );
   };
@@ -54,96 +61,64 @@ export default function ActionCardsScreen() {
     }
   };
 
-  const renderCardIcon = (iconName: string, color: string) => {
-    switch (iconName) {
-      case 'activity': return <Activity size={22} color={color} />;
-      case 'shield': return <Shield size={22} color={color} />;
-      case 'map-pin': return <MapPin size={22} color={color} />;
-      case 'heart': return <Heart size={22} color={color} />;
-      default: return <Shield size={22} color={color} />;
-    }
-  };
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.badgePill}>
-          <Sparkles size={12} color="#38BDF8" style={{ marginRight: 6 }} />
-          <Text style={styles.badgeText}>PRESCRIPTIVE DEFENSE PROTOCOL</Text>
-        </View>
-        <Text style={styles.title}>Action Cards</Text>
-        <Text style={styles.subtitle}>Prioritized decisions tailored to incoming smoke and traffic plumes</Text>
+        <Text style={styles.screenTag}>INTERVENTION ENGINE</Text>
+        <Text style={styles.title}>ACTION CARDS</Text>
+        <Text style={styles.subTitle}>
+          • PRESCRIPTIVE BEHAVIORAL PROTOCOLS
+        </Text>
       </View>
 
-      {/* Swipeable / Actionable Cards Feed */}
-      <View style={styles.cardsFeed}>
-        {cards.map((card) => {
+      {/* Advisory Cards List */}
+      <View style={styles.cardsContainer}>
+        {cards.map((card, index) => {
           const isReminded = remindedIds[card.id];
           return (
-            <View key={card.id} style={styles.actionCard}>
-              {/* Card Category & Urgency */}
-              <View style={styles.cardHeaderRow}>
-                <View style={styles.cardIconBox}>
-                  {renderCardIcon(card.icon, card.urgency_color)}
-                </View>
-                <View style={{ flex: 1, paddingLeft: 12 }}>
-                  <View style={[styles.categoryPill, { backgroundColor: `${card.urgency_color}25` }]}>
-                    <Text style={[styles.categoryText, { color: card.urgency_color }]}>{card.category}</Text>
-                  </View>
-                  <Text style={styles.cardTitle}>{card.title}</Text>
-                </View>
+            <View key={card.id || index} style={styles.cardBox}>
+              {/* Card Meta Row */}
+              <View style={styles.metaRow}>
+                <Text style={styles.metaBadge}>{`[ADVISORY ${index + 1}]`}</Text>
+                <Text style={styles.timingText}>{card.duration.toUpperCase()}</Text>
               </View>
 
-              {/* Action Breakdown Grid */}
-              <View style={styles.detailsBox}>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>CAUSAL REASON</Text>
-                  <Text style={styles.detailValue}>{card.reason}</Text>
-                </View>
+              {/* Title */}
+              <Text style={styles.cardTitle}>{card.title.toUpperCase()}</Text>
 
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>TARGET DURATION</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Clock size={12} color="#38BDF8" style={{ marginRight: 4 }} />
-                    <Text style={styles.detailValue}>{card.duration}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>MEASURED LUNG IMPACT</Text>
-                  <Text style={[styles.detailValue, { color: '#10B981', fontWeight: '700' }]}>
-                    {card.expected_impact}
-                  </Text>
-                </View>
+              {/* Reason */}
+              <View style={styles.infoBlock}>
+                <Text style={styles.infoLabel}>CAUSE / RATIONALE:</Text>
+                <Text style={styles.infoBody}>{card.reason}</Text>
               </View>
 
-              {/* Action Buttons: Set Reminder & Share to WhatsApp */}
-              <View style={styles.actionsFooter}>
-                <TouchableOpacity
-                  style={[styles.reminderBtn, isReminded && styles.reminderBtnActive]}
+              {/* Expected Impact */}
+              <View style={styles.impactBlock}>
+                <Text style={styles.impactLabel}>EXPECTED IMPACT:</Text>
+                <Text style={styles.impactValue}>
+                  {card.expected_impact.toUpperCase()}
+                </Text>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.buttonRow}>
+                <AsciiButton
+                  label={isReminded ? 'ALERT SET' : 'SET REMINDER'}
+                  prefix={isReminded ? '*' : '+'}
+                  variant={isReminded ? 'primary' : 'secondary'}
+                  size="sm"
                   onPress={() => handleSetReminder(card)}
-                >
-                  {isReminded ? (
-                    <>
-                      <Check size={16} color="#10B981" style={{ marginRight: 6 }} />
-                      <Text style={[styles.btnText, { color: '#10B981' }]}>Reminder Set</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Bell size={16} color="#38BDF8" style={{ marginRight: 6 }} />
-                      <Text style={[styles.btnText, { color: '#38BDF8' }]}>Set Reminder</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.shareWhatsAppBtn}
+                  style={{ flex: 1 }}
+                />
+                <AsciiButton
+                  label="SHARE TO RWA"
+                  prefix=">"
+                  variant="primary"
+                  size="sm"
                   onPress={() => handleShareWhatsApp(card)}
-                >
-                  <Share2 size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.shareBtnText}>Share to WhatsApp</Text>
-                </TouchableOpacity>
+                  style={{ flex: 1 }}
+                />
               </View>
             </View>
           );
@@ -154,89 +129,123 @@ export default function ActionCardsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#090D16' },
-  content: { padding: 18, paddingBottom: 40 },
-  header: { marginBottom: 18, marginTop: 40 },
-  badgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-    marginBottom: 8,
-  },
-  badgeText: { color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  title: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
-  subtitle: { fontSize: 13, color: '#94A3B8', marginTop: 4 },
-  cardsFeed: { gap: 16 },
-  actionCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-  },
-  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  cardIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(30, 41, 59, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(71, 85, 105, 0.4)',
-  },
-  categoryPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  categoryText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  cardTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', lineHeight: 22 },
-  detailsBox: {
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderRadius: 14,
-    padding: 12,
-    gap: 8,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
-  },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  detailLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  detailValue: { color: '#F1F5F9', fontSize: 12, fontWeight: '600', maxWidth: '65%', textAlign: 'right' },
-  actionsFooter: { flexDirection: 'row', gap: 10 },
-  reminderBtn: {
+  container: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-    borderRadius: 14,
-    paddingVertical: 12,
+    backgroundColor: Colors.bg,
+  },
+  header: {
+    paddingTop: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bg,
+  },
+  screenTag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: Colors.textMuted,
+    marginBottom: Spacing.xs,
+  },
+  title: {
+    fontFamily: FontFamily.mono,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    color: Colors.textPrimary,
+  },
+  subTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  cardsContainer: {
+    paddingVertical: Spacing.sm,
+  },
+  cardBox: {
+    marginHorizontal: Spacing.lg,
+    marginVertical: Spacing.sm,
+    padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: Colors.borderStrong,
+    backgroundColor: Colors.bg,
   },
-  reminderBtnActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    borderColor: 'rgba(16, 185, 129, 0.4)',
-  },
-  shareWhatsAppBtn: {
-    flex: 1.2,
+  metaRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#25D366',
-    borderRadius: 14,
-    paddingVertical: 12,
+    marginBottom: Spacing.sm,
   },
-  btnText: { fontSize: 13, fontWeight: '700' },
-  shareBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  metaBadge: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: Colors.brandAccent,
+  },
+  timingText: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textMuted,
+  },
+  cardTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  infoBlock: {
+    marginBottom: Spacing.sm,
+  },
+  infoLabel: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textMuted,
+    marginBottom: 2,
+  },
+  infoBody: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    lineHeight: 16,
+    color: Colors.textSecondary,
+    letterSpacing: 0.3,
+  },
+  impactBlock: {
+    paddingVertical: Spacing.xs + 2,
+    paddingHorizontal: Spacing.sm,
+    backgroundColor: Colors.bgSubtle,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    marginBottom: Spacing.md,
+  },
+  impactLabel: {
+    fontFamily: FontFamily.mono,
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textMuted,
+    marginBottom: 2,
+  },
+  impactValue: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    color: Colors.healthGood,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
 });

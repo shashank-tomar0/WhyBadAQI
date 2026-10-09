@@ -7,6 +7,7 @@ import {
   setupNotificationListeners,
   scheduleDailySummary,
 } from '../services/notifications';
+import { Colors } from '../constants/theme';
 
 export default function RootLayout() {
   useEffect(() => {
@@ -24,11 +25,11 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#090D16' },
+          contentStyle: { backgroundColor: Colors.bg },
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />

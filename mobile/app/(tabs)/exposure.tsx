@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { api, ExposureScoreData } from '../../services/api';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Award, Flame, Navigation, ShieldCheck, Bell, ArrowRight, Share2, TrendingUp, CheckCircle } from 'lucide-react-native';
-
-const { width } = Dimensions.get('window');
+import { api, ExposureScoreData } from '../../services/api';
+import { Colors, FontFamily, Spacing } from '../../constants/theme';
+import AsciiButton from '../../components/AsciiButton';
+import MetricTile from '../../components/MetricTile';
+import ProjectionRow from '../../components/ProjectionRow';
 
 export default function ExposureScoreScreen() {
   const router = useRouter();
@@ -23,288 +29,330 @@ export default function ExposureScoreScreen() {
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981'; // Green
-    if (score >= 60) return '#F59E0B'; // Amber
-    return '#EF4444'; // Red
-  };
-
-  const renderBadgeIcon = (iconName: string, unlocked: boolean) => {
-    const color = unlocked ? '#38BDF8' : '#64748B';
-    switch (iconName) {
-      case 'award': return <Award size={22} color={color} />;
-      case 'navigation': return <Navigation size={22} color={color} />;
-      case 'bell': return <Bell size={22} color={color} />;
-      case 'shield-check': return <ShieldCheck size={22} color={color} />;
-      default: return <Award size={22} color={color} />;
-    }
-  };
-
-  const score = data?.daily_exposure_score ?? 78.5;
-  const scoreColor = getScoreColor(score);
+  const score = Math.round(data?.daily_exposure_score ?? 78);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.wardTag}>{data?.ward || 'Ward 45 (Central)'}</Text>
-          <TouchableOpacity style={styles.shareBtn} onPress={() => router.push('/share-card')}>
-            <Share2 size={16} color="#38BDF8" style={{ marginRight: 6 }} />
-            <Text style={styles.shareBtnText}>Share Score</Text>
-          </TouchableOpacity>
+          <Text style={styles.screenTag}>INHALATION DOSE TRACKER</Text>
+          <Text style={styles.wardStatus}>{`[${data?.ward?.toUpperCase() || 'WARD 45'}]`}</Text>
         </View>
-        <Text style={styles.title}>My Exposure Score</Text>
-        <Text style={styles.subtitle}>Fitness-tracked inhaled dose & protective choices</Text>
-      </View>
-
-      {/* Fitness-style Circular Gauge Card */}
-      <View style={styles.scoreCard}>
-        <View style={styles.scoreGaugeCircle}>
-          <View style={[styles.outerGlowRing, { borderColor: scoreColor }]} />
-          <View style={styles.scoreInnerContent}>
-            <Text style={[styles.scoreNumber, { color: scoreColor }]}>{Math.round(score)}</Text>
-            <Text style={styles.scoreTotal}>/ 100</Text>
-            <Text style={styles.scoreBadgeText}>{data?.score_label || 'Good Control'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.streakBanner}>
-          <Flame size={20} color="#FF6B35" style={{ marginRight: 8 }} />
-          <Text style={styles.streakText}>
-            <Text style={styles.streakHighlight}>{data?.streak_days ?? 4} DAYS</Text> consecutive clean-air choices!
-          </Text>
-        </View>
-      </View>
-
-      {/* Commute Route Comparison Feature */}
-      <View style={styles.routeCard}>
-        <View style={styles.routeHeader}>
-          <Navigation size={18} color="#38BDF8" style={{ marginRight: 8 }} />
-          <Text style={styles.routeTitle}>HYPERLOCAL ROUTE COMPARISON</Text>
-        </View>
-        <Text style={styles.routeHeadline}>
-          {data?.commute_comparison.headline || 'Your commute = 18% more PM2.5 than cleanest route'}
+        <Text style={styles.title}>MY EXPOSURE SCORE</Text>
+        <Text style={styles.subTitle}>
+          • HYPERLOCAL DOSIMETRY & PROTECTIVE CHOICES
         </Text>
+      </View>
 
-        <View style={styles.routeOptionsRow}>
-          {/* Default Route */}
-          <View style={styles.routeBox}>
-            <Text style={styles.routeTypeLabel}>YOUR CURRENT ROUTE</Text>
-            <Text style={styles.routeName}>Highway / Ring Road</Text>
-            <Text style={styles.routeDoseRed}>84 µg/m³ inhaled</Text>
-            <Text style={styles.routeDuration}>34 mins transit</Text>
-          </View>
+      {/* Hero Score Readout */}
+      <View style={styles.heroScoreCard}>
+        <View style={styles.scoreNumberRow}>
+          <Text style={styles.scoreNumber}>{score}</Text>
+          <Text style={styles.scoreUnit}>/100</Text>
+        </View>
+        <Text style={styles.scoreLabel}>
+          {`• STATUS: ${data?.score_label?.toUpperCase() || 'MODERATE CONTROL'}`}
+        </Text>
+        <Text style={styles.streakNotice}>
+          {`STREAK: ${data?.streak_days ?? 4} CONSECUTIVE DAYS OF LOW-EXPOSURE CHOICES`}
+        </Text>
+      </View>
 
-          {/* Cleanest Recommended Route */}
-          <View style={[styles.routeBox, styles.routeBoxClean]}>
-            <View style={styles.cleanPill}>
-              <Text style={styles.cleanPillText}>18% CLEANER</Text>
-            </View>
-            <Text style={styles.routeTypeLabelClean}>RECOMMENDED ROUTE</Text>
-            <Text style={styles.routeName}>Green Belt Boulevard</Text>
-            <Text style={styles.routeDoseGreen}>69 µg/m³ inhaled</Text>
-            <Text style={styles.routeDuration}>38 mins (+4m)</Text>
-          </View>
+      {/* Commute Route Comparison Callout */}
+      <View style={styles.routeBox}>
+        <Text style={styles.routeHeader}>[COMMUTE ROUTE COMPARISON]</Text>
+        <Text style={styles.routeDetail}>
+          {data?.commute_comparison?.headline || 'YOUR COMMUTE EXPOSURE IS +18% HIGHER THAN CLEANEST ALTERNATIVE VIA INNER RING RD.'}
+        </Text>
+      </View>
+
+      {/* High-Density Metrics Grid */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>DOSIMETRY METRICS</Text>
+      </View>
+
+      <View style={styles.metricGrid}>
+        <View style={styles.metricRow}>
+          <MetricTile
+            label="ACTIVE STREAK"
+            value={`${data?.streak_days ?? 4} DAYS`}
+            subValue="CONSECUTIVE DAYS"
+            accentColor={Colors.sourceStubble}
+          />
+          <MetricTile
+            label="ROUTE DELTA"
+            value={`+${data?.commute_comparison?.cleanest_route?.reduction || '18%'}`}
+            subValue="HIGHWAY VS CLEAN ROUTE"
+          />
+        </View>
+
+        <View style={styles.metricRow}>
+          <MetricTile
+            label="CUMULATIVE DOSE"
+            value="42 µG/M³"
+            subValue="INHALED ESTIMATE"
+          />
+          <MetricTile
+            label="WARD RANK"
+            value="#14 / 240"
+            subValue="TOP 6% IN WARD"
+          />
         </View>
       </View>
 
-      {/* Weekly History Mini Bar Chart */}
-      <View style={styles.historyCard}>
-        <View style={styles.historyHeader}>
-          <TrendingUp size={16} color="#38BDF8" style={{ marginRight: 8 }} />
-          <Text style={styles.historyTitle}>7-DAY EXPOSURE TREND</Text>
-        </View>
-
-        <View style={styles.barsContainer}>
-          {(data?.weekly_history || []).map((h, i) => (
-            <View key={i} style={styles.barColumn}>
-              <View style={styles.barTrack}>
-                <View
-                  style={[
-                    styles.barFill,
-                    {
-                      height: `${h.score}%`,
-                      backgroundColor: getScoreColor(h.score),
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.barDay}>{h.day}</Text>
-            </View>
-          ))}
-        </View>
+      {/* Weekly Inhalation History */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>7-DAY EXPOSURE HISTORY</Text>
       </View>
 
-      {/* Clean Air Badges Gallery */}
-      <View style={styles.badgeSection}>
-        <Text style={styles.badgeSectionTitle}>CLEAN AIR BADGE GALLERY</Text>
-        <View style={styles.badgesGrid}>
-          {(data?.badges || []).map((b) => (
-            <View key={b.id} style={[styles.badgeItem, !b.unlocked && styles.badgeItemLocked]}>
-              <View style={[styles.badgeIconCircle, b.unlocked && styles.badgeIconCircleUnlocked]}>
-                {renderBadgeIcon(b.icon, b.unlocked)}
-              </View>
-              <Text style={[styles.badgeItemTitle, !b.unlocked && { color: '#64748B' }]}>{b.title}</Text>
-              <Text style={styles.badgeItemDesc}>{b.description}</Text>
-              {b.unlocked && (
-                <View style={styles.unlockedTag}>
-                  <CheckCircle size={10} color="#10B981" style={{ marginRight: 4 }} />
-                  <Text style={styles.unlockedText}>UNLOCKED</Text>
-                </View>
-              )}
+      <View style={styles.historyTable}>
+        {(data?.weekly_history || [
+          { day: 'MON', score: 85 },
+          { day: 'TUE', score: 72 },
+          { day: 'WED', score: 64 },
+          { day: 'THU', score: 78 },
+          { day: 'FRI', score: 82 },
+          { day: 'SAT', score: 90 },
+          { day: 'SUN', score: 78 },
+        ]).map((item, idx) => (
+          <ProjectionRow
+            key={idx}
+            dayLabel={item.day}
+            sourceTag={`[${item.score >= 80 ? 'CLEAN' : item.score >= 60 ? 'MODERATE' : 'POOR'}]`}
+            sourceColor={item.score >= 80 ? Colors.healthGood : item.score >= 60 ? Colors.healthModerate : Colors.healthPoor}
+            minAqi={100 - item.score}
+            maxAqi={100}
+            globalMax={100}
+          />
+        ))}
+      </View>
+
+      {/* Badge Gallery */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>ACHIEVEMENT BADGES</Text>
+      </View>
+
+      <View style={styles.badgesContainer}>
+        {(data?.badges || [
+          { id: '1', title: 'Route Optimizer', unlocked: true, icon: 'navigation' },
+          { id: '2', title: 'Clean Air Champ', unlocked: true, icon: 'shield-check' },
+          { id: '3', title: 'Early Warner', unlocked: false, icon: 'bell' },
+        ]).map((b) => (
+          <View key={b.id} style={styles.badgeRow}>
+            <Text style={[styles.badgeTag, { color: b.unlocked ? Colors.black : Colors.textMuted }]}>
+              {`[${b.icon?.toUpperCase() || 'BADGE'}]`}
+            </Text>
+            <View style={styles.badgeInfo}>
+              <Text style={[styles.badgeTitle, !b.unlocked && styles.badgeLocked]}>
+                {b.title.toUpperCase()}
+              </Text>
+              <Text style={styles.badgeStatus}>
+                {b.unlocked ? '[UNLOCKED]' : '[IN PROGRESS]'}
+              </Text>
             </View>
-          ))}
-        </View>
+          </View>
+        ))}
+      </View>
+
+      {/* Share Button */}
+      <View style={styles.footerAction}>
+        <AsciiButton
+          label="GENERATE SHAREABLE SCORE CARD"
+          prefix=">"
+          variant="primary"
+          onPress={() => router.push('/share-card')}
+        />
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#090D16' },
-  content: { padding: 18, paddingBottom: 40 },
-  header: { marginBottom: 18, marginTop: 40 },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  wardTag: { color: '#38BDF8', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
-  shareBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-  },
-  shareBtnText: { color: '#38BDF8', fontSize: 11, fontWeight: '700' },
-  title: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
-  subtitle: { fontSize: 13, color: '#94A3B8', marginTop: 4 },
-  scoreCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-    marginBottom: 16,
-  },
-  scoreGaugeCircle: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    marginVertical: 8,
-  },
-  outerGlowRing: {
-    position: 'absolute',
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    borderWidth: 8,
-    opacity: 0.85,
-  },
-  scoreInnerContent: { alignItems: 'center' },
-  scoreNumber: { fontSize: 48, fontWeight: '900', letterSpacing: -1 },
-  scoreTotal: { fontSize: 14, color: '#64748B', fontWeight: '700' },
-  scoreBadgeText: { fontSize: 11, fontWeight: '800', color: '#94A3B8', marginTop: 4, letterSpacing: 0.5 },
-  streakBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 107, 53, 0.12)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 53, 0.3)',
-    marginTop: 14,
-  },
-  streakText: { color: '#F1F5F9', fontSize: 12 },
-  streakHighlight: { color: '#FF6B35', fontWeight: '800' },
-  routeCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-    marginBottom: 16,
-  },
-  routeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  routeTitle: { color: '#94A3B8', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
-  routeHeadline: { color: '#F8FAFC', fontSize: 14, fontWeight: '700', marginBottom: 14 },
-  routeOptionsRow: { flexDirection: 'row', gap: 10 },
-  routeBox: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(30, 41, 59, 0.5)',
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(71, 85, 105, 0.4)',
+    backgroundColor: Colors.bg,
   },
-  routeBoxClean: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+  header: {
+    paddingTop: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bg,
   },
-  cleanPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#10B981',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 6,
-  },
-  cleanPillText: { color: '#FFF', fontSize: 9, fontWeight: '900' },
-  routeTypeLabel: { color: '#94A3B8', fontSize: 9, fontWeight: '800' },
-  routeTypeLabelClean: { color: '#10B981', fontSize: 9, fontWeight: '800' },
-  routeName: { color: '#FFF', fontSize: 12, fontWeight: '700', marginTop: 2 },
-  routeDoseRed: { color: '#EF4444', fontSize: 11, fontWeight: '700', marginTop: 4 },
-  routeDoseGreen: { color: '#10B981', fontSize: 11, fontWeight: '700', marginTop: 4 },
-  routeDuration: { color: '#64748B', fontSize: 10, marginTop: 2 },
-  historyCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-    marginBottom: 16,
-  },
-  historyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  historyTitle: { color: '#94A3B8', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
-  barsContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 100, alignItems: 'flex-end', paddingTop: 10 },
-  barColumn: { alignItems: 'center', width: 32 },
-  barTrack: { height: 75, width: 14, backgroundColor: 'rgba(51, 65, 85, 0.4)', borderRadius: 7, justifyContent: 'flex-end' },
-  barFill: { width: 14, borderRadius: 7 },
-  barDay: { color: '#94A3B8', fontSize: 10, marginTop: 6, fontWeight: '600' },
-  badgeSection: { marginTop: 6 },
-  badgeSectionTitle: { color: '#94A3B8', fontSize: 11, fontWeight: '800', letterSpacing: 0.8, marginBottom: 12 },
-  badgesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  badgeItem: {
-    width: (width - 46) / 2,
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.7)',
-  },
-  badgeItemLocked: { opacity: 0.45 },
-  badgeIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(51, 65, 85, 0.4)',
-    justifyContent: 'center',
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.xs,
   },
-  badgeIconCircleUnlocked: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+  screenTag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: Colors.textMuted,
   },
-  badgeItemTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
-  badgeItemDesc: { color: '#94A3B8', fontSize: 10, marginTop: 4, lineHeight: 14 },
-  unlockedTag: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  unlockedText: { color: '#10B981', fontSize: 9, fontWeight: '800' },
+  wardStatus: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: Colors.textSecondary,
+  },
+  title: {
+    fontFamily: FontFamily.mono,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    color: Colors.textPrimary,
+  },
+  subTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  heroScoreCard: {
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bg,
+  },
+  scoreNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  scoreNumber: {
+    fontFamily: FontFamily.mono,
+    fontSize: 78,
+    fontWeight: '900',
+    lineHeight: 80,
+    letterSpacing: -3,
+    color: Colors.textPrimary,
+  },
+  scoreUnit: {
+    fontFamily: FontFamily.mono,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textMuted,
+    marginLeft: 6,
+  },
+  scoreLabel: {
+    fontFamily: FontFamily.mono,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    color: Colors.textPrimary,
+    marginTop: Spacing.sm,
+  },
+  streakNotice: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.8,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  routeBox: {
+    padding: Spacing.lg,
+    backgroundColor: Colors.bgSubtle,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  routeHeader: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  routeDetail: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    lineHeight: 18,
+    color: Colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  routeHighlight: {
+    fontWeight: '800',
+    color: Colors.brandAccent,
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.bgSubtle,
+    borderBottomWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  sectionTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: Colors.textMuted,
+  },
+  metricGrid: {
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  metricRow: {
+    flexDirection: 'row',
+  },
+  historyTable: {
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  badgesContainer: {
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.lg,
+    borderBottomWidth: 0.5,
+    borderColor: Colors.borderLight,
+  },
+  badgeTag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '800',
+    width: 100,
+  },
+  badgeInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  badgeTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.textPrimary,
+  },
+  badgeLocked: {
+    color: Colors.textMuted,
+  },
+  badgeStatus: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: Colors.textMuted,
+  },
+  footerAction: {
+    padding: Spacing.lg,
+    backgroundColor: Colors.bg,
+  },
 });

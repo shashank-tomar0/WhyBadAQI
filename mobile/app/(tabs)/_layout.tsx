@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { Map, PieChart, Activity, CheckSquare, Users } from 'lucide-react-native';
+import { Colors, FontFamily } from '../../constants/theme';
 
 export default function TabLayout() {
   return (
@@ -9,54 +10,56 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#090D16',
-          borderTopColor: 'rgba(51, 65, 85, 0.7)',
+          backgroundColor: Colors.bg,
+          borderTopColor: Colors.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          height: Platform.OS === 'ios' ? 84 : 62,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#38BDF8',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: Colors.black,
+        tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontFamily: FontFamily.mono,
+          fontSize: 9,
           fontWeight: '700',
+          letterSpacing: 1.2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Live Map',
-          tabBarIcon: ({ color, size }) => <Map size={20} color={color} />,
+          title: '[MAP]',
+          tabBarIcon: ({ color }) => <Map size={18} color={color} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen
         name="attribution"
         options={{
-          title: 'Why Bad?',
-          tabBarIcon: ({ color, size }) => <PieChart size={20} color={color} />,
+          title: '[WHY BAD]',
+          tabBarIcon: ({ color }) => <PieChart size={18} color={color} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen
         name="exposure"
         options={{
-          title: 'My Score',
-          tabBarIcon: ({ color, size }) => <Activity size={20} color={color} />,
+          title: '[SCORE]',
+          tabBarIcon: ({ color }) => <Activity size={18} color={color} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen
         name="actions"
         options={{
-          title: 'Actions',
-          tabBarIcon: ({ color, size }) => <CheckSquare size={20} color={color} />,
+          title: '[ACTIONS]',
+          tabBarIcon: ({ color }) => <CheckSquare size={18} color={color} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Community',
-          tabBarIcon: ({ color, size }) => <Users size={20} color={color} />,
+          title: '[REPORTS]',
+          tabBarIcon: ({ color }) => <Users size={18} color={color} strokeWidth={2} />,
         }}
       />
     </Tabs>

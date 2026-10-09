@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { Wind, MapPin } from 'lucide-react-native';
+import { Colors, FontFamily, Spacing } from '../../constants/theme';
+import AsciiButton from '../../components/AsciiButton';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -16,7 +25,7 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
-      Alert.alert('Required Fields', 'Please complete your name, email, and password');
+      Alert.alert('[INPUT REQUIRED]', 'Please fill in name, email, and password credentials.');
       return;
     }
     setSubmitting(true);
@@ -24,150 +33,175 @@ export default function RegisterScreen() {
       await register(name, email, password, ward);
       router.replace('/(tabs)');
     } catch (err: any) {
-      Alert.alert('Registration Failed', err.message || 'Error creating account');
+      Alert.alert('[REGISTRATION FAILED]', err.message || 'Error creating account');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-      <LinearGradient colors={['#0F172A', '#020617', '#000000']} style={styles.background}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <View style={styles.iconCircle}>
-              <Wind size={26} color="#38BDF8" />
-            </View>
-            <Text style={styles.title}>Join WhyBadAQI</Text>
-            <Text style={styles.subtitle}>Protect your lungs with street-level air source tracking</Text>
-          </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Terminal Header */}
+        <View style={styles.header}>
+          <Text style={styles.tag}>CITIZEN SENSOR ONBOARDING</Text>
+          <Text style={styles.title}>NEW OPERATOR</Text>
+          <Text style={styles.subTitle}>
+            • ENROLL IN HYPERLOCAL ATMOSPHERIC DISPERSION GRID
+          </Text>
+        </View>
 
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Rohan Sharma"
-                placeholderTextColor="#64748B"
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
+        {/* Form Card */}
+        <View style={styles.formBox}>
+          <Text style={styles.formTag}>[CREDENTIAL CONFIGURATION]</Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="rohan@example.com"
-                placeholderTextColor="#64748B"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+          <Text style={styles.label}>OPERATOR NAME:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="ROHAN SHARMA"
+            placeholderTextColor={Colors.textMuted}
+            value={name}
+            onChangeText={setName}
+          />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#64748B"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
+          <Text style={styles.label}>EMAIL IDENTIFIER:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="OPERATOR@WHYBADAQI.AI"
+            placeholderTextColor={Colors.textMuted}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Assigned Ward / Neighborhood</Text>
-              <View style={styles.wardContainer}>
-                <MapPin size={18} color="#38BDF8" style={{ marginRight: 8 }} />
-                <TextInput
-                  style={[styles.input, { flex: 1, borderWidth: 0 }]}
-                  placeholder="Ward 45 (Central)"
-                  placeholderTextColor="#64748B"
-                  value={ward}
-                  onChangeText={setWard}
-                />
-              </View>
-            </View>
+          <Text style={styles.label}>SECURITY KEY (PASSWORD):</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••••••"
+            placeholderTextColor={Colors.textMuted}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-            <TouchableOpacity style={styles.primaryButton} onPress={handleRegister} disabled={submitting}>
-              {submitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Create Account & Start Sensing</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.label}>RESIDENCE WARD ZONE:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="WARD 45 (CENTRAL DELHI)"
+            placeholderTextColor={Colors.textMuted}
+            value={ward}
+            onChangeText={setWard}
+          />
 
-          <TouchableOpacity style={styles.footerLink} onPress={() => router.back()}>
-            <Text style={styles.footerText}>
-              Already registered? <Text style={styles.footerHighlight}>Sign In</Text>
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </LinearGradient>
+          <AsciiButton
+            label={submitting ? 'INITIALIZING...' : 'INITIALIZE ACCOUNT'}
+            prefix=">"
+            variant="primary"
+            disabled={submitting}
+            onPress={handleRegister}
+            style={{ marginTop: Spacing.md }}
+          />
+        </View>
+
+        {/* Back to Login */}
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>ALREADY HAVE CREDENTIALS?</Text>
+          <AsciiButton
+            label="RETURN TO TERMINAL LOGIN"
+            prefix="<"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.back()}
+          />
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  background: { flex: 1 },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  header: { alignItems: 'center', marginBottom: 24 },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  scrollContent: {
+    padding: Spacing.xl,
+    paddingTop: Spacing.xxl + 10,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
   },
-  title: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
-  subtitle: { fontSize: 13, color: '#94A3B8', marginTop: 4, textAlign: 'center' },
-  card: {
-    backgroundColor: 'rgba(30, 41, 59, 0.75)',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.15)',
+  header: {
+    marginBottom: Spacing.xl,
   },
-  inputGroup: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '500', color: '#CBD5E1', marginBottom: 6 },
+  tag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: Colors.textMuted,
+    marginBottom: Spacing.xs,
+  },
+  title: {
+    fontFamily: FontFamily.mono,
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: -1,
+    color: Colors.textPrimary,
+  },
+  subTitle: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  formBox: {
+    borderWidth: 1.5,
+    borderColor: Colors.borderStrong,
+    backgroundColor: Colors.bg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  formTag: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    color: Colors.brandAccent,
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontFamily: FontFamily.mono,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
   input: {
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#FFFFFF',
-    fontSize: 15,
+    fontFamily: FontFamily.mono,
+    fontSize: 12,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.8)',
+    borderColor: Colors.borderStrong,
+    backgroundColor: Colors.bgSubtle,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
-  wardContainer: {
-    flexDirection: 'row',
+  footerRow: {
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.8)',
+    gap: Spacing.xs,
   },
-  primaryButton: {
-    backgroundColor: '#0284C7',
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 12,
+  footerText: {
+    fontFamily: FontFamily.mono,
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 1,
+    color: Colors.textMuted,
   },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  footerLink: { marginTop: 24, alignItems: 'center' },
-  footerText: { color: '#94A3B8', fontSize: 14 },
-  footerHighlight: { color: '#38BDF8', fontWeight: '700' },
 });
