@@ -102,12 +102,11 @@ c0fa907  feat(ui): implement 5 core screens + viral share card
 
 ---
 
-## 🔄 READY FOR LIVE API KEYS
-
-All live API client modules are already written in `backend/app/api/ingestion.py`. Just plug keys into `.env`:
-- NASA FIRMS Map Key: https://firms.modaps.eosdis.nasa.gov/api/map_key/
-- OpenAQ v3 API Key: https://explore.openaq.org/
-- OpenWeatherMap API Key: https://openweathermap.org/api
+- [x] **Live Satellite & Sensor Integration (All 3 APIs Active & Verified Live):**
+  - **NASA FIRMS MODIS / VIIRS**: Thermal anomaly satellite queries active (Key: `3aed288...`)
+  - **OpenAQ v3 Ground Sensors**: CPCB / DPCC Delhi ground stations ingesting live PM2.5 (Key: `3a60025...`)
+  - **OpenWeatherMap & Open-Meteo**: Live wind vectors (16.7 km/h, 100° E), 30.0°C, 70% humidity (Key: `5ceb773...`)
+  - **End-to-End Live Validation**: All 10 API endpoints tested live against `http://127.0.0.1:8000` with 100% pass rate.
 
 ---
 

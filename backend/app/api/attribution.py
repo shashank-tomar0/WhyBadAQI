@@ -29,5 +29,6 @@ def get_forecast(
     feed = air_quality_service.get_hyperlocal_feed(lat=lat, lon=lon, time_offset_hours=0)
     return {
         "current_aqi": feed["aqi"],
-        "forecast": feed["forecast_24h"]
+        "forecast": feed["forecast_24h"],
+        "forecast_24h": feed["forecast_24h"]
     }

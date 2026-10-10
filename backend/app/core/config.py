@@ -1,5 +1,20 @@
 import os
+from pathlib import Path
 from typing import Optional
+
+# Robust .env loader
+env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+if env_file.exists():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(dotenv_path=env_file)
+    except ImportError:
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
 
 class Settings:
     PROJECT_NAME: str = "WhyBadAQI API"
